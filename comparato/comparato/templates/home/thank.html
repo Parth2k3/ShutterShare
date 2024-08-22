@@ -1,0 +1,168 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css?family=Raleway:100,200,300,400,500,600,700,800,900&display=swap');
+html,body {
+    font-family: 'Raleway', sans-serif;  
+}
+.thankyou-page ._header {
+    background: #fee028;
+    padding: 100px 30px;
+    text-align: center;
+    background: #fee028 url(https://codexcourier.com/images/main_page.jpg) center/cover no-repeat;
+}
+.thankyou-page ._header .logo {
+    max-width: 200px;
+    margin: 0 auto 50px;
+}
+.thankyou-page ._header .logo img {
+    width: 100%;
+}
+.thankyou-page ._header h1 {
+    font-size: 65px;
+    font-weight: 800;
+    color: white;
+    margin: 0;
+}
+.thankyou-page ._body {
+    margin: -70px 0 30px;
+}
+.thankyou-page ._body ._box {
+    margin: auto;
+    max-width: 80%;
+    padding: 50px;
+    background: white;
+    border-radius: 3px;
+    box-shadow: 0 0 35px rgba(10, 10, 10,0.12);
+    -moz-box-shadow: 0 0 35px rgba(10, 10, 10,0.12);
+    -webkit-box-shadow: 0 0 35px rgba(10, 10, 10,0.12);
+}
+.thankyou-page ._body ._box h2 {
+    font-size: 32px;
+    font-weight: 600;
+    color: #4ab74a;
+}
+.thankyou-page ._footer {
+    text-align: center;
+    padding: 50px 30px;
+}
+
+.thankyou-page ._footer .btn {
+    background: #4ab74a;
+    color: white;
+    border: 0;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 0;
+    letter-spacing: 0.8px;
+    padding: 20px 33px;
+    text-transform: uppercase;
+}
+.inp{
+    width: 100%;
+    border-width: 1px;
+    height: 42px;
+    border-radius: 15px;
+    
+}
+.inp_btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff; /* Blue background color */
+            color: white; /* White text */
+            text-align: center;
+            text-decoration: none;
+            border-radius: 25px; /* Curved border */
+            font-size: 18px;
+            border: 2px solid #007bff; /* Border with the same color as background */
+            transition: background-color 0.3s ease, color 0.3s ease;
+            margin-top: 15px;
+        }
+
+        .inp_btn:hover {
+            background-color: white;
+            color: #007bff;
+        }
+    </style>
+<link rel="stylesheet" href="{% static 'css/nav.css' %}">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top" style="background-color: #91b9ff7c !important; border-bottom-left-radius: 5%; border-bottom-right-radius: 5%;">
+        <!-- Container wrapper -->
+        <div class="container">
+          <!-- Navbar brand -->
+          <a class="navbar-brand" style="margin-left: -50px;" href="/"><img id="MDB-logo"
+              src="{% static 'media/logo-png-crop.png' %}" alt="ShutterShare Logo"
+              draggable="false" height="30" /></a>
+        </div>
+    </nav>
+
+<div class="thankyou-page">
+    <div class="_header">
+        <div class="logo">
+            <img src="https://codexcourier.com/images/banner-logo.png" alt="">
+        </div>
+        <h1>Thank You!</h1>
+    </div>
+    <div class="_body">
+        <div class="_box">
+            <h2>
+                Thank you for helping out a mate. They really appreciate your time.
+            </h2>
+            <p>
+                You can also use this platform to let people help you out with your confused mind. Create an account, upload pictures and create a post to share with your friends or the world to help you out with your decisions.
+            </p>
+            <h2 style="color: black;">Let them know what you feel about this post </h2><p>(log in to comment)</p>
+            <form id="commentForm">
+            {% csrf_token %}
+            <input type="text" name="comment" class="inp" placeholder="Comment">
+            <div class="button-container">
+                <button type="submit" class="inp_btn">Post</button>
+            </div>
+        </form>
+        </div>
+    </div>
+    <div class="_footer">
+        <p>Already have an account? <a href="/login/">Login</a> </p>
+        <a class="btn" href="/register/">Register Here</a>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#commentForm').on('submit', function(event) {
+            event.preventDefault();  // Prevent the default form submission
+            
+            $.ajax({
+                url: '/comment/{{ post_id }}',
+                method: 'POST',
+                data: {
+                    'comment': $('input[name="comment"]').val(),
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    // Clear the comment input field
+                    $('input[name="comment"]').val('');
+                    
+                    // Append the new comment to the comment section
+                    $('#commentSection').append(
+                        '<p><strong>' + response.username + ':</strong> ' + response.comment + '</p>'
+                    );
+                },
+                error: function(xhr, status, error) {
+                    alert('An error occurred: ' + error);
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>

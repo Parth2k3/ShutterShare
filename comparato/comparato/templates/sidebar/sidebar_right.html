@@ -1,0 +1,103 @@
+<style>
+    .sidebar-right {
+        position: fixed;
+        top: 6%;
+        right:1%;
+        width: 450px;
+        height: 100%;
+        padding-top: 20px;
+        z-index: 1000;
+        overflow-y: auto;
+    }
+  
+.notification-content {
+    display: flex;
+    align-items: flex-start;
+}
+
+.notification-dot {
+    width: 10px;
+    height: 10px;
+    background-color: green;
+    border-radius: 50%;
+    margin-right: 10px; /* Space between dot and text */
+}
+
+.notification-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.notification-date {
+    margin-top: 5px; /* Space between message and date */
+    color: #6c757d; /* Optional: Adjust color for the date */
+}
+
+.list-group-item {
+    display: flex;
+    align-items: flex-start;
+}
+
+
+</style>
+<div class="col-md-3 sidebar-right">
+    <div class="card gedf-card">
+            <div class="card-body">
+                <h5 class="card-title">Notifications</h5>
+                <ul class="list-group list-group-flush">
+                    {% for notification in notifications %}
+                    <li class="list-group-item d-flex align-items-start {% if not notification.is_read %}font-weight-bold{% endif %}">
+                        <div class="notification-content">
+                            {% if not notification.is_read %}
+                            <span class="notification-dot"></span>
+                            {% endif %}
+                            <div class="notification-text">
+                                <p>
+                                    <a style="text-decoration: none;" href="{{ notification.url }}">
+                                        {% if notification.creator %}
+                                            {{ notification.creator }}
+                                        {% else %}
+                                            
+                                        {% endif %}
+                                        {{ notification.messages }}
+                                    </a>
+                                </p>
+                                <small class="notification-date">{{ notification.created|date:"M d, Y H:i" }}</small>
+                            </div>
+                        </div>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item">No notifications</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        // Function to mark notifications as read
+        function markNotificationsAsRead() {
+            $.ajax({
+                type: "POST",
+                url: "/read_notification/",
+                data: {
+                    csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val() // CSRF token
+                },
+                success: function(response) {
+                    console.log('Notifications marked as read.');
+                    // Optionally handle the response here
+                },
+                error: function(xhr, status, error) {
+                    console.error('Failed to mark notifications as read:', error);
+                }
+            });
+        }
+
+        setTimeout(function() {
+            markNotificationsAsRead();
+        }, 2000); 
+    });
+</script>

@@ -1,0 +1,86 @@
+<style>
+.sidebar {
+    position: fixed;
+    top:6%;
+    left: 1%;
+    width: 275px;
+    height: 100%;
+    padding-top: 20px;
+    z-index: 1000;
+    overflow-y: auto;
+}
+</style>
+<div class="col-md-3 sidebar">
+    <div class="card">
+        <div class="card-body">
+            <div class="h5">@{{request.user.username}}</div>
+            <div class="h7 text-muted">Fullname : {{request.user.first_name}} {{request.user.last_name}}</div>
+            <div class="h7">{{request.user.yang}}</div>
+            <div class="h7">{{request.user.bio}}</div>
+        </div>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">
+                <div class="h6 text-muted">Followers</div>
+                <div style="margin-left: 10px;" class="h5">{{request.user.followers.count}}</div>
+            </li>
+            <li class="list-group-item">
+                <div class="h6 text-muted">Following</div>
+                <div style="margin-left: 10px;" class="h5">{{request.user.following.count}}</div>
+            </li>
+            <br>
+            <div class="h6 text-muted mx-3">Following</div>
+            
+            
+            {% for follower in request.user.following.all %}
+            <div class="list-group-item d-flex align-items-center" id="person-{{follower.id}}">
+                <img src="{{follower.user_pic.url}}" alt="" width="20px" class="rounded-sm ml-n2" />
+                <div class="flex-fill pl-1 pr-1">
+                    <div><a href="/profile/{{follower.username}}" class="text-dark font-weight-600 mx-3">{{ follower.username|slice:":9" }}{% if follower.username|length > 9 %}...{% endif %}</a></div>
+                </div>
+                <button id="follow-btn" style="padding: 0.2rem 0.5rem;" data-following="true" data-user-id="{{ follower.id }}" class="btn btn-outline-primary">Remove</button>
+            </div>            
+            {% endfor %}
+            
+        </ul>
+    </div>
+</div>
+<script>
+    document.getElementById('follow-btn').addEventListener('click', function(event) {
+            const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+            event.preventDefault(); // Prevent the default anchor behavior
+            const userId = this.getAttribute('data-user-id');
+            const button = event.target;
+            const isFollowing = button.getAttribute('data-following') === 'true';
+            fetch(`/follow/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken, // Add the CSRF token for security
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (isFollowing) {
+                        // User was following, now unfollowed
+                        button.textContent = 'Follow';
+                        button.classList.remove('btn-outline-primary');
+                        button.classList.add('btn-primary');
+                        button.setAttribute('data-following', 'false');
+                    } else {
+                        // User was not following, now followed
+                        button.textContent = 'Remove';
+                        button.classList.remove('btn-primary');
+                        button.classList.add('btn-outline-primary');
+                        button.setAttribute('data-following', 'true');
+                    }
+                } else {
+                    console.error('Follow/unfollow failed');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+</script>

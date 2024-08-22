@@ -1,0 +1,167 @@
+{% load static %}
+<!-- Navbar -->
+<link rel="stylesheet" href="{% static 'css/nav.css' %}">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top" style="background-color: #91b9ff7c !important; border-bottom-left-radius: 5%; border-bottom-right-radius: 5%;">
+    <!-- Container wrapper -->
+    <div class="container">
+      <!-- Navbar brand -->
+      <a class="navbar-brand" style="margin-left: -50px;" href="/"><img id="MDB-logo"
+          src="{% static 'media/logo-png-crop.png' %}" alt="ShutterShare Logo"
+          draggable="false" height="30" /></a>
+  
+      <!-- Toggle button -->
+      <div class="dropdown navbar-drop">
+        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: transparent !important; border: none !important;">
+            <img src="{{request.user.user_pic.url}}" alt="DP" class="rounded-circle" width="30" height="30">
+        </button>
+        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
+            <button class="btn btn-primary dropdown-item" style="color: white; background-color: rgb(96, 96, 212) !important;" data-bs-toggle="modal" data-bs-target="#createPostModal">Create</button>
+            <a class="dropdown-item" href="/profile/{{request.user.username}}">Profile</a>
+            <a class="dropdown-item" href="#">Settings</a>
+            <a class="dropdown-item" href="#">Logout</a>
+      </div>
+      </div>
+  
+      <!-- Collapsible wrapper -->
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        
+  
+        <form class="d-flex align-items-center w-100 form-search" style="padding-left: 12.7rem;">
+          <div class="input-group">
+            <button class="btn btn-light dropdown-toggle shadow-0" type="button" data-mdb-toggle="dropdown"
+              aria-expanded="false" style="padding-bottom: 0.4rem;">
+              All
+            </button>
+            <ul class="dropdown-menu dropdown-menu-dark fa-ul">
+              <li>
+                <a class="dropdown-item" href="#"><span class="fa-li pe-2"><i class="fas fa-search"></i></span>All</a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="#"><span class="fa-li pe-2"><i
+                      class="fas fa-film"></i></span>Titles</a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="#"><span class="fa-li pe-2"><i class="fas fa-tv"></i></span>TV
+                  Episodes</a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="#"><span class="fa-li pe-2"><i
+                      class="fas fa-user-friends"></i></span>Celebs</a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="#"><span class="fa-li pe-2"><i
+                      class="fas fa-building"></i></span>Companies</a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="#"><span class="fa-li pe-2"><i
+                      class="fas fa-key"></i></span>Keywords</a>
+              </li>
+              <li>
+                <hr class="dropdown-divider" />
+              </li>
+              <li>
+                <a class="dropdown-item" href="#"><span class="fa-li pe-2"><i
+                      class="fas fa-search-plus"></i></span>Advanced
+                  search<i class="fas fa-chevron-right ps-2"></i></a>
+              </li>
+            </ul>
+            <input type="search" class="form-control" placeholder="Search" aria-label="Search"/>
+          </div>
+          <a href="#!" class="text-white" style="padding-left: 5px;"><i class="fas fa-search ps-3"></i></a>
+        </form>
+        <div style="margin-right: -60px; padding-left: 295px;">
+        <ul class="navbar-nav ms-3">
+          <li class="nav-item me-3">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createPostModal">Create</button>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link d-flex align-items-center me-3" href="/followers">
+              <i class="fas fa-users pe-2"></i> People
+            </a>
+          </li>
+          <li>
+            <div class="dropdown">
+              <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: transparent !important; border: none !important;">
+                  <img src="{{request.user.user_pic.url}}" alt="DP" class="rounded-circle" width="30" height="30">
+              </button>
+              <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
+                  <a class="dropdown-item" href="/profile/{{request.user.username}}">Profile</a>
+                  <a class="dropdown-item" href="/dash">My Uploads</a>
+                  <a class="dropdown-item" href="/logout">Logout</a>
+              </div>
+          </div>
+          </li>
+        </ul>
+      </div>
+      </div>
+    </div>
+  </nav>
+  <div class="modal fade" id="createPostModal" tabindex="-1" aria-labelledby="createPostModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createPostModalLabel">Create a Post</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createPostForm" action="{% url 'create_post' %}" method="post" enctype="multipart/form-data">
+                  {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="postTitle" class="form-label">Title</label>
+                        <input type="text" name="title" class="form-control" id="postTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="postImages" class="form-label">Images</label>
+                        <input type="file" name="image" class="form-control" id="postImages" multiple>
+                    </div>
+                    <div class="mb-3">
+                        <label for="postDescription" class="form-label">Description</label>
+                        <textarea class="form-control" name="desc" id="postDescription" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="fruits">Topics</label>
+                        <select id="fruits" name="tags[]" multiple data-multi-select>
+                          <option value="self_portraits">Self Portraits</option>
+                          <option value="art">Art</option>
+                          <option value="fashion_style">Fashion Style</option>
+                          <option value="products">Products</option>
+                          <option value="creative_projects">Creative Projects</option>
+                          <option value="events">Events</option>
+                          <option value="photography_techniques">Photography Techniques</option>
+                          <option value="themes_challenges">Themes & Challenges</option>
+                          <option value="inspiration_ideas">Inspiration & Ideas</option>
+                          <option value="comparisons">Comparisons</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="postPrivacy" class="form-label">Privacy</label>
+                        <select class="form-select" id="postPrivacy" name="privacy" required>
+                            <option value="public">Public</option>
+                            <option value="followers">Followers</option>
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Create Post</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const choices = new Choices('#fruits', {
+      removeItemButton: true,
+      searchResultLimit: 5,
+      renderChoiceLimit: 10
+  });
+});
+
+</script>

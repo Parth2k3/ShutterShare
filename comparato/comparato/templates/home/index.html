@@ -1,0 +1,400 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.1.1/dist/css/bootstrap.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+    
+    <style>
+        /* Media Query to hide sidebars on mobile devices */
+        @media (max-width: 767px) {
+            .sidebar{
+                display: none; /* Hide sidebars on mobile */
+            } 
+            .sidebar-right{
+                display: none;
+            }
+            .gedf-main{
+                margin-left: 0% !important;
+            }
+            .gedf-card{
+                margin-top: 2% !important;
+            }
+            .navbar-brand{
+                margin-left: 3% !important;
+            }
+            .navbar-drop{
+                display: block;
+            }
+            
+        }
+        @media (min-width: 767px){
+            .navbar-drop{
+                display: none;
+            }
+        }
+        .comments-section {
+            margin-top: 10px;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+
+        .comment {
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            border: 1px solid #e0e0e0;
+        }
+
+        .comment input {
+            width: 75%;
+            padding: 5px;
+            margin-right: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .comment button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+
+        .comment button:hover {
+            background-color: #0056b3;
+        }
+        .card-link :hover{
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>       
+    {% include 'sidebar/navbar.html' %}
+
+    <div class="container gedf-wrapper">
+        <div class="row">
+            {% include 'sidebar/sidebar_main.html' %}
+            <div class="col-md-6 gedf-main" style="margin-left: 210px; margin-top: 2rem; padding: 20px;">
+
+                <!--- \\\\\\\Post-->
+                <form action="{% url 'create_post' %}" enctype="multipart/form-data" method="post">
+                {% csrf_token %}
+                    <div class="card gedf-card">
+                    <div class="card-header">
+                        <ul class="nav nav-tabs card-header-tabs" id="myTab" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" id="posts-tab" data-toggle="tab" href="#posts" role="tab" aria-controls="posts" aria-selected="true">Make a publication</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="images-tab" data-toggle="tab" role="tab" aria-controls="images" aria-selected="false" href="#images">Images</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-body">
+                        <div class="tab-content" id="myTabContent">
+                            <div class="tab-pane fade show active" id="posts" role="tabpanel" aria-labelledby="posts-tab">
+                                <div class="form-group">
+                                    <label class="sr-only" for="message">post</label>
+                                    <input type="text" name="title" class="form-control" id="message" placeholder="Title"></input>
+                                </div>
+                                <div class="form-group col-12 flex-column d-flex">
+                                    <label for="topics">Choose Tags</label>
+                                    <select id="topics" name="tags[]" multiple>
+                                        <option value="self_portraits">Self Portraits</option>
+                                        <option value="art">Art</option>
+                                        <option value="fashion_style">Fashion & Style</option>
+                                        <option value="products">Products</option>
+                                        <option value="creative_projects">Creative Projects</option>
+                                        <option value="events">Events</option>
+                                        <option value="photography_techniques">Photography Techniques</option>
+                                        <option value="themes_challenges">Themes & Challenges</option>
+                                        <option value="inspiration_ideas">Inspiration & Ideas</option>
+                                        <option value="comparisons">Comparisons</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="images" role="tabpanel" aria-labelledby="images-tab">
+                                <div class="form-group">
+                                    <div class="custom-file">
+                                        <label for="postImages" class="form-label">Images</label>
+                                        <input type="file" name="image" class="form-control" id="postImages" multiple>
+                                    </div>
+                                </div>
+                                <div class="py-4"></div>
+                            </div>
+                        </div>
+                        <div class="btn-toolbar justify-content-between">
+                            <div class="btn-group">
+                                <button type="submit" class="btn btn-primary">Share</button>
+                            </div>
+                            <div class="btn-group">
+                                    <i id="privacy-icon" class="fa fa-globe" style="font-size: 20px; margin-right: 10px; margin-top: 10px;"></i>
+                                    <select id="privacy-select" name="privacy" class="form-control" style="width: auto; display: inline-block;">
+                                        <option value="public" selected>Public</option>
+                                        <option value="followers">Followers</option>
+                                    </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </form>
+
+                {% for post in posts %}
+                <div class="card gedf-card" id="post-{{ post.id }}">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="mr-2">
+                                    <img class="rounded-circle" width="45" src="{{post.creator.user_pic.url}}" alt="">
+                                </div>
+                                <div class="ml-2">
+                                    <div class="h5 m-0"><a style="text-decoration: none; color: black;" href="/profile/{{post.creator.username}}">{{post.creator.username}}</a></div>
+                                    <div class="h7 text-muted">{{post.get_full_name}}</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="dropdown">
+                                    <button class="btn btn-link" type="button" id="gedf-drop1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <i class="fa fa-ellipsis-h"></i>
+                                    </button>
+                                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="gedf-drop1">
+                                        <a class="dropdown-item" href="/view/{{post.id}}">Details</a>
+                                        {% if post.creator == request.user %}
+                                        <a class="dropdown-item delete-post" data-post-id="{{ post.id }}" href="javascript:void(0);">Delete</a>
+                                        {% endif %}
+                                        <button class="dropdown-item" id="copyButton" data-url="/compare/14">Copy Link</button>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-muted h7 mb-2"> <i class="fa fa-clock-o"></i>{{post.modified}}</div>
+                        <a class="card-link" href="/compare/{{post.id}}">
+                            <h5 class="card-title">{{post.title}}</h5>
+                        </a>
+                        <div id="carousel-{{ post.id }}" class="carousel slide" data-ride="carousel">
+                            <div class="carousel-inner">
+                                {% for image in post.images.all %}
+                                <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                    <img class="d-block w-100" src="{{ image.image_file }}" alt="{{ image.title }}">
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <a class="carousel-control-prev" href="#carousel-{{ post.id }}" role="button" data-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="sr-only">Previous</span>
+                            </a>
+                            <a class="carousel-control-next" href="#carousel-{{ post.id }}" role="button" data-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="sr-only">Next</span>
+                            </a>
+                        </div>
+                        <p class="card-text">{{post.description}}</p>
+
+                        <div>
+                            {% for topic in post.post_topics.all %}
+                                {% if topic.self_portraits > 0.5 %}
+                                    <span class="badge badge-primary">Self Portraits</span>
+                                {% endif %}
+                                {% if topic.art > 0.5 %}
+                                    <span class="badge badge-primary">Art</span>
+                                {% endif %}
+                                {% if topic.fashion_style > 0.5 %}
+                                    <span class="badge badge-primary">Fashion Style</span>
+                                {% endif %}
+                                {% if topic.products > 0.5 %}
+                                    <span class="badge badge-primary">Products</span>
+                                {% endif %}
+                                {% if topic.creative_projects > 0.5 %}
+                                    <span class="badge badge-primary">Creative Projects</span>
+                                {% endif %}
+                                {% if topic.events > 0.5 %}
+                                    <span class="badge badge-primary">Events</span>
+                                {% endif %}
+                                {% if topic.photography_techniques > 0.5 %}
+                                    <span class="badge badge-primary">Photography Techniques</span>
+                                {% endif %}
+                                {% if topic.themes_challenges > 0.5 %}
+                                    <span class="badge badge-primary">Themes Challenges</span>
+                                {% endif %}
+                                {% if topic.inspiration_ideas > 0.5 %}
+                                    <span class="badge badge-primary">Inspiration Ideas</span>
+                                {% endif %}
+                                {% if topic.comparisons > 0.5 %}
+                                    <span class="badge badge-primary">Comparisons</span>
+                                {% endif %}
+                            {% endfor %}
+                        </div>                        
+                    </div>
+                    <div class="card-footer">
+                        <a href="#" class="card-link like-btn" data-post-id="{{ post.id }}" style="text-decoration: none;">
+                            <img src="{% static 'media/heart-fill.svg' %}" class="heart-icon filled-heart" style="display: {% if request.user in post.likers.all %}inline{% else %}none{% endif %};">
+                            <img src="{% static 'media/heart.svg' %}" class="heart-icon empty-heart" style="display: {% if request.user not in post.likers.all %}inline{% else %}none{% endif %};">
+                            <span class="likecnt"> {{ post.like_count }}</span>
+                        </a>
+                        <a class="card-link" style="text-decoration: none;" onclick="toggleComments({{ post.id }})">
+                            <i class="fa fa-comment"></i> <span id="commcnt">  {{ post.comment_count }}</span> 
+                        </a>
+                        <div id="comments-section-{{ post.id }}" class="comments-section" style="display: none;">
+                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                <input type="text" class="form-control" id="comment-input-{{ post.id }}" placeholder="Add a comment..." />
+                                <button class="btn btn-primary" onclick="submitComment({{ post.id }})">Submit</button>
+                            </div>
+                            <div id="comments-list-{{ post.id }}">
+                                {% for comment in post.comments.all %}
+                                    <div class="comment"><strong>{{ comment.creator.username }}</strong> - {{ comment.text }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                                                
+                    </div>
+                </div>
+                {% endfor %}
+
+            </div>
+            {% include 'sidebar/sidebar_right.html' %}
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.3/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+    <script>
+
+        $(document).ready(function() {
+            $('.delete-post').click(function() {
+                var postId = $(this).data('post-id');
+                var url = '/delete_post/' + postId;
+
+                if (confirm('Are you sure you want to delete this post?')) {
+                    $.ajax({
+                        url: url,
+                        type: 'POST',
+                        data: {
+                            'csrfmiddlewaretoken': '{{ csrf_token }}'
+                        },
+                        success: function(response) {
+                            $('#post-' + postId).remove();                            
+                            alert('Post deleted successfully!');
+
+                        },
+                        error: function(xhr, status, error) {
+                            alert('An error occurred while trying to delete the post. Please try again.');
+                        }
+                    });
+                }
+            });
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+        const choices = new Choices('#topics', {
+                removeItemButton: true,
+                searchResultLimit: 5,
+                renderChoiceLimit: 10
+            });
+            const privacySelect = document.getElementById('privacy-select');
+            const privacyIcon = document.getElementById('privacy-icon');
+
+            privacySelect.addEventListener('change', function() {
+                if (privacySelect.value === 'public') {
+                    privacyIcon.classList.remove('fa-users');
+                    privacyIcon.classList.add('fa-globe');
+                } else if (privacySelect.value === 'followers') {
+                    privacyIcon.classList.remove('fa-globe');
+                    privacyIcon.classList.add('fa-users');
+                }
+            });
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.1/dist/js/bootstrap.min.js"></script>
+    <script>
+        document.querySelectorAll('.like-btn').forEach(function(button) {
+            button.addEventListener('click', function(event) {
+                event.preventDefault();
+                
+                let postId = this.getAttribute('data-post-id');
+                let filledHeart = this.querySelector('.filled-heart');
+                let emptyHeart = this.querySelector('.empty-heart');
+                let likeCount = this.querySelector('.likecnt');
+
+                fetch(`/like_post/${postId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.liked) {
+                        filledHeart.style.display = 'inline';
+                        emptyHeart.style.display = 'none';
+                        likeCount.textContent = parseInt(likeCount.textContent) + 1;
+
+                    } else {
+                        filledHeart.style.display = 'none';
+                        emptyHeart.style.display = 'inline';
+                        likeCount.textContent = parseInt(likeCount.textContent) - 1;
+                    }
+                });
+            });
+        });
+        function toggleComments(postId) {
+        const commentsSection = document.getElementById(`comments-section-${postId}`);
+        commentsSection.style.display = commentsSection.style.display === 'none' ? 'block' : 'none';
+    }
+
+    document.getElementById('copyButton').addEventListener('click', function() {
+        const url = this.getAttribute('data-url');
+        navigator.clipboard.writeText(url).then(() => {
+            alert('Link copied to clipboard!');
+        }).catch(err => {
+            console.error('Failed to copy link: ', err);
+        });
+    });
+
+
+    function submitComment(postId) {
+        const commentInput = document.getElementById(`comment-input-${postId}`);
+        const commentText = commentInput.value;
+
+        fetch(`/comment/${postId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ comment: commentText })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const commentsList = document.getElementById(`comments-list-${postId}`);
+                let commcnt = document.getElementById('commcnt');
+                const newComment = document.createElement('div');
+                newComment.className = 'comment';
+                newComment.textContent = `${data.username} - ${commentText}`; // Adjust as necessary to include username
+                commentsList.appendChild(newComment);
+                commentInput.value = ''; // Clear the input
+                commcnt.textContent = parseInt(commcnt.textContent) + 1;
+            } else {
+                alert('Error adding comment');
+            }
+        });
+    }
+    </script>
+</body>
+</html>

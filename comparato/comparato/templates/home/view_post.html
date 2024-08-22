@@ -1,0 +1,303 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <title>{{post.title}}</title>
+        <link href="{% static 'css/view_post.css' %}" rel="stylesheet" />
+        <link
+        rel="stylesheet"
+        href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+        crossorigin="anonymous"
+        />
+        <style>
+            @media (max-width: 767px) {
+            .sidebar{
+                display: none; /* Hide sidebars on mobile */
+            } 
+            .sidebar-right{
+                display: none;
+            }
+            .gedf-main{
+                margin-left: 0% !important;
+            }
+            .gedf-card{
+                margin-top: 2% !important;
+            }
+            .navbar-brand{
+                margin-left: 3% !important;
+            }
+            .navbar-drop{
+                display: block;
+            }
+            
+        }
+        @media (min-width: 767px){
+            .navbar-drop{
+                display: none;
+            }
+        }
+        </style>
+    </head>
+    <body>
+        {% include 'sidebar/navbar.html' %}
+        <!-- Page Content-->
+        <div class="container px-4 px-lg-5" style="padding-top: 30px;">
+            <!-- Heading Row-->
+            <div class="row gx-4 gx-lg-5 align-items-center my-5">
+                <div class="col-lg-7">
+                    <div id="postCarousel" class="carousel slide" data-ride="carousel">
+                        <div class="carousel-inner">
+                            {% for image in post.images.all %}
+                            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                <img src="{{ image.image_file }}" class="d-block w-100" alt="{{ image.title }}">
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <a class="carousel-control-prev" href="#postCarousel" role="button" data-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="sr-only">Previous</span>
+                        </a>
+                        <a class="carousel-control-next" href="#postCarousel" role="button" data-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="sr-only">Next</span>
+                        </a>
+                    </div>
+            </div>
+                <div class="col-lg-5">
+                    <h1 class="font-weight-light">{{post.title}}</h1>
+                    <p>{{post.description}}</p>
+                    <p><a class="btn btn-warning" href="/compare/{{post.id}}">Start Comparing</a></p>
+                    <div>
+                        {% for topic in post.post_topics.all %}
+                            {% if topic.self_portraits > 0.5 %}
+                                <span class="badge badge-primary">Self Portraits</span>
+                            {% endif %}
+                            {% if topic.art > 0.5 %}
+                                <span class="badge badge-primary">Art</span>
+                            {% endif %}
+                            {% if topic.fashion_style > 0.5 %}
+                                <span class="badge badge-primary">Fashion Style</span>
+                            {% endif %}
+                            {% if topic.products > 0.5 %}
+                                <span class="badge badge-primary">Products</span>
+                            {% endif %}
+                            {% if topic.creative_projects > 0.5 %}
+                                <span class="badge badge-primary">Creative Projects</span>
+                            {% endif %}
+                            {% if topic.events > 0.5 %}
+                                <span class="badge badge-primary">Events</span>
+                            {% endif %}
+                            {% if topic.photography_techniques > 0.5 %}
+                                <span class="badge badge-primary">Photography Techniques</span>
+                            {% endif %}
+                            {% if topic.themes_challenges > 0.5 %}
+                                <span class="badge badge-primary">Themes Challenges</span>
+                            {% endif %}
+                            {% if topic.inspiration_ideas > 0.5 %}
+                                <span class="badge badge-primary">Inspiration Ideas</span>
+                            {% endif %}
+                            {% if topic.comparisons > 0.5 %}
+                                <span class="badge badge-primary">Comparisons</span>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+            </div>
+
+            <div class="card my-5">
+                <div class="card-header">
+                    <h3>Comments</h3>
+                </div>
+                <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                    {% if post.comments.all %}
+                        {% for comment in post.comments.all %}
+                            <div class="media mb-4">
+                                <img src="{{ comment.creator.user_pic.url }}" alt="{{ comment.creator.username }}" width="50px" class="rounded-sm mr-3">
+                                <div class="media-body">
+                                    <h6 class="mt-0"><a style="text-decoration: none; color: black;" href="/profile/{{ comment.creator.username }}">{{ comment.creator.username }}</a></h6>
+                                    {{ comment.text }}
+                                    <small class="text-muted">{{ comment.created_at|date:"M d, Y H:i" }}</small>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p>No comments yet. Be the first to comment!</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Call to Action-->
+            <div class="card text-white bg-primary my-5 text-center" style="background-color: rgba(77, 131, 206, 0.606) !important;">
+                <div class="card-body"><p class="text-white m-0"><h1>HERE ARE SOME AMAZING STATS</h1></p></div>
+            </div>
+            <!-- Content Row-->
+            <div class="row gx-4 gx-lg-5 mb-5">
+                <div class="col-lg-6">
+                    <canvas id="engagementPieChart" style="height: 300px;"></canvas> <!-- Canvas for Pie Chart -->
+                </div>
+                <div class="col-lg-6">
+                    <canvas id="votesBarChart" style="height: 300px;"></canvas> <!-- Canvas for Bar Chart -->
+                </div>
+            </div>    
+
+            <div class="card text-center my-3">
+                <div class="card-body"><p class="m-0"><h2>See how the images are performing</h2></p></div>
+            </div>
+
+            <div class="row gx-4 gx-lg-5">
+                {% for image in post.images.all|dictsortreversed:"likes" %}
+                <div class="col-md-4 mb-5">
+                    <div class="card h-100">
+                        <img src="{{ image.image_file }}" class="card-img-top" alt="{{ image.title }}">
+                        <div class="card-body">
+                            <h5 class="card-title">Rank: {{ forloop.counter }}</h5>
+                            <p class="card-text">{{ image.title }}</p>
+                            <p class="card-text">Likes: {{ image.likes }}</p>
+                            <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#likersModal{{ forloop.counter }}">View Likers</button>
+                        </div>
+                    </div>
+                </div>
+    
+                <!-- Likers Modal -->
+                <div class="modal fade" id="likersModal{{ forloop.counter }}" tabindex="-1" role="dialog" aria-labelledby="likersModalLabel{{ forloop.counter }}" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="likersModalLabel{{ forloop.counter }}">Likers for {{ image.title }}</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <ul>
+                                    {% for liker in image.likers.all %}
+                                    <li><a style="text-decoration: none; color: black;" href="/profile/{{liker.username}}">{{ liker.username }}</a></li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <!-- Footer-->
+        <footer class="py-5 bg-dark">
+            <div class="container px-4 px-lg-5"><p class="m-0 text-center text-white">Copyright &copy; ShutterShare 2024</p></div>
+        </footer>
+        <!-- Bootstrap core JS-->
+        <!-- Core theme JS-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+        <script
+        src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+        crossorigin="anonymous"
+      ></script>
+      <script>
+        const ctx = document.getElementById('engagementPieChart').getContext('2d');
+        const engagementData = {
+            labels: ['Likes', 'Votes', 'Comments'],
+            datasets: [{
+                data: [{{ post.like_count }}, {{ post.total_votes }}, {{ post.comment_count }}],
+                backgroundColor: ['#ff9999','#66b3ff','#99ff99'],
+                hoverOffset: 4
+            }]
+        };
+        const config = {
+            type: 'pie',
+            data: engagementData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Post Engagement Distribution'
+                    }
+                },
+                layout: {
+                    padding: {
+                        top: 20, // Add some padding if necessary
+                        bottom: 20
+                    }
+                }
+            },
+        };
+        new Chart(ctx, config);
+        const titles = [
+        {% for image in post.images.all %}
+            "{{ image.title }}"{% if not forloop.last %}, {% endif %}
+        {% endfor %}
+    ];
+
+    const votes = [
+        {% for image in post.images.all %}
+            {{ image.likes }}{% if not forloop.last %}, {% endif %}
+        {% endfor %}
+    ];
+
+    const ctxBar = document.getElementById('votesBarChart').getContext('2d');
+    const barChartData = {
+        labels: titles,
+        datasets: [{
+            label: 'Votes',
+            data: votes,
+            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    };
+
+    const barConfig = {
+        type: 'bar',
+        data: barChartData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false,
+                },
+                title: {
+                    display: true,
+                    text: 'Image Votes Distribution'
+                },
+                grid: {
+                    display: false // Hide y-axis grid
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Votes'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Image Titles'
+                    },
+                    grid: {
+                        display: false // Hide y-axis grid
+                    }
+                }
+            }
+        },
+    };
+
+    new Chart(ctxBar, barConfig);
+    </script>
+    </body>
+</html>

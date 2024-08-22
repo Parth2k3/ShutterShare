@@ -1,0 +1,126 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="{% static 'css/followers.css' %}">
+    <style>
+        @media (max-width: 767px) {
+            .sidebar{
+                display: none; /* Hide sidebars on mobile */
+            } 
+            .sidebar-right{
+                display: none;
+            }
+            .gedf-main{
+                margin-left: 0% !important;
+            }
+            .gedf-card{
+                margin-top: 2% !important;
+            }
+            .navbar-brand{
+                margin-left: 3% !important;
+            }
+            .navbar-drop{
+                display: block;
+            }
+            
+        }
+        @media (min-width: 767px){
+            .navbar-drop{
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    {% include 'sidebar/navbar.html' %}
+    <div class="container" style="margin-top: 80px !important;">
+        <div class="profile">
+            <div class="profile-header">
+                <div class="profile-header-cover"></div>
+                <div class="profile-header-content">
+                    <div class="profile-header-img">
+                        <img src="{{request.user.user_pic.url}}" alt="" />
+                    </div>
+                    <ul class="profile-header-tab nav nav-tabs nav-tabs-v2">
+                        <li class="nav-item">
+                            <a href="#profile-followers" class="nav-link active" data-toggle="tab">
+                                <div class="nav-field">Followers</div>
+                                <div class="nav-value" id="foll-cnt">{{request.user.followers.count}}</div>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+    
+            <div class="profile-container">
+                <div class="profile-sidebar">
+                    <div class="desktop-sticky-top">
+                        <h4>{{request.user.first_name}} {{request.user.last_name}}</h4>
+                        <div class="font-weight-600 mb-3 text-muted mt-n2">@{{request.user.username}}</div>
+                        <div class="mb-1"><i class="fa fa-map-marker-alt fa-fw text-muted"></i>{{request.user.yang}}</div>
+                        <div class="mb-3"><i class="fa fa-link fa-fw text-muted"></i>{{request.user.bio}}</div>
+                        <hr class="mt-4 mb-4" />
+                    </div>
+                </div>
+    
+                <div class="profile-content">
+                    <div class="row">
+                        <div class="col-xl-12">
+                            <div class="tab-content p-0">
+                                <div class="tab-pane fade active show" id="profile-followers">
+                                    <div class="list-group">
+                                        {% csrf_token %}
+                                        {% for follower in request.user.followers.all %}
+                                        <div class="list-group-item d-flex align-items-center" id="person-{{follower.id}}">
+                                            <img src="{{follower.user_pic.url}}" alt="" width="50px" class="rounded-sm ml-n2" />
+                                            <div class="flex-fill pl-3 pr-3">
+                                                <div><a href="/profile/{{follower.username}}" class="text-dark font-weight-600 mx-3">{{follower.username}}</a></div>
+                                                <div class="text-muted fs-13px mx-3">{{follower.first_name}} {{follower.last_name}}</div>
+                                            </div>
+                                            <button id="follow-btn" data-user-id="{{ follower.id }}" class="btn btn-outline-primary">Remove Follower</button>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.getElementById('follow-btn').addEventListener('click', function(event) {
+            const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+            event.preventDefault(); // Prevent the default anchor behavior
+            const userId = this.getAttribute('data-user-id');
+            const div = document.querySelector(`#person-${userId}`);
+            const follCnt = document.querySelector('#foll-cnt')
+            fetch(`/remove_follow/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken, // Add the CSRF token for security
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    follCnt.textContent = parseInt(follCnt.textContent)-1;
+                    div.remove();
+                } else {
+                    console.error('Follow/unfollow failed');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>
