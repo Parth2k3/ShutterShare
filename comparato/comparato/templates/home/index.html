@@ -86,7 +86,7 @@
             <div class="col-md-6 gedf-main" style="margin-left: 210px; margin-top: 2rem; padding: 20px;">
 
                 <!--- \\\\\\\Post-->
-                <form action="{% url 'create_post' %}" enctype="multipart/form-data" method="post">
+                <form action="{% url 'create_post' %}" enctype="multipart/form-data" method="post" class="create-post-form">
                 {% csrf_token %}
                     <div class="card gedf-card">
                     <div class="card-header">
@@ -147,7 +147,7 @@
                     </div>
                 </div>
                 </form>
-
+                <div id="post-container">
                 {% for post in posts %}
                 <div class="card gedf-card" id="post-{{ post.id }}">
                     <div class="card-header">
@@ -262,7 +262,8 @@
                     </div>
                 </div>
                 {% endfor %}
-
+                </div>
+                <div id="loading" style="display: none;">Loading...</div>
             </div>
             {% include 'sidebar/sidebar_right.html' %}
         </div>
@@ -395,6 +396,10 @@
             }
         });
     }
-    </script>
+
+    
+    
+
+</script>
 </body>
 </html>

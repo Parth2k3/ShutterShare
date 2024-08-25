@@ -13,28 +13,42 @@ from django.db.models import Q
 from user_app.models import User
 import cloudinary.uploader
 from cloudinary.uploader import destroy
-
+from django.core.paginator import Paginator
 
 class IndexView(APIView):
     permission_classes = [CustomIsAuthenticated]
 
     def get(self, request):
-        posts = Posts.objects.filter(Q(is_private = False) | Q(creator__in=request.user.following.all()) | Q(creator = request.user)).prefetch_related('post_topics')
-        for post in posts:
+        search_query = request.GET.get('q', '').strip()
+        page_number = request.GET.get('page', 1)
+        
+        # Filter posts based on the search query
+        posts = Posts.objects.filter(
+            Q(is_private=False) | Q(creator__in=request.user.following.all()) | Q(creator=request.user),
+            Q(title__icontains=search_query) | Q(description__icontains=search_query)
+        ).prefetch_related('post_topics').order_by('-id')
+
+        # Paginate posts
+        paginator = Paginator(posts, 4)  # Show 7 posts per page
+        page_obj = paginator.get_page(page_number)
+
+        for post in page_obj:
             post.comment_count = post.comments.count()
+
         notifications = Notifs.objects.filter(
-            Q(target=request.user) & ~Q(creator = request.user)
+            Q(target=request.user) & ~Q(creator=request.user)
         ).order_by('-created')
+        
         context = {
-            'posts': posts,
+            'posts': page_obj,
             'notifications': notifications
         }
         return render(request, "home/index.html", context=context)
 
-from .tasks import upload_image_to_cloudinary
+import cloudinary.uploader
 
 class CreatePostView(APIView):
-    permission_classes = [CustomIsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         posted_data = request.data
@@ -45,8 +59,13 @@ class CreatePostView(APIView):
             is_private = posted_data.get('privacy') == 'followers',
             creator = request.user
         )
-        upload_image_to_cloudinary.delay([img.read() for img in posted_images], request.user.id, post.id)
-        
+        for img in posted_images:
+            result = cloudinary.uploader.upload(img)
+            image_instance = Image.objects.create(
+                image_file=result['url'], 
+                creator=request.user
+            )
+            post.images.add(image_instance)
 
         for tag in posted_data.getlist('tags[]'):
             topic, created = Topic.objects.get_or_create(post=post)
@@ -60,6 +79,15 @@ class CreatePostView(APIView):
                 url = f"/view/{post.id}"
             )
         return redirect("index")
+
+class UploadProgressView(APIView):
+    permission_classes = [CustomIsAuthenticated]
+
+    async def get(self, request):
+        user_id = request.user.id
+        progress = cache.get(f'upload_progress_{user_id}', 0)
+        return JsonResponse({'progress': progress})
+
 
 class CompareView(APIView):
     def get(self, request, post_id):

@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'home',
     'user_app',
     'rest_framework',
+    'background_task',
 ]
 
 MIDDLEWARE = [
@@ -120,20 +121,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [('redis-15796.c264.ap-south-1-1.ec2.redns.redis-cloud.com', 15796)],
-        },
-    },
-}
-
-BROKER_URL = 'redis://default:x82nlpU1xpIdKwYS7h2X3GxlzpBfB07w@redis-15796.c264.ap-south-1-1.ec2.redns.redis-cloud.com:15796'
-
-CELERY_ACCEPT_CONTENT = ['application/json']
-CELERY_TASK_SERIALIZER = 'json'
 
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_URL = '/login'
