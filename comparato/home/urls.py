@@ -1,5 +1,5 @@
 from django.urls import path
-from home.views import IndexView, CreatePostView, CompareView, thanks, comment, like_post, ViewView, update_post, delete_image, PeopleView, follow, remove_follow, read_notification, delete_post, UploadProgressView
+from home.views import IndexView, CreatePostView, CompareView, thanks, comment, like_post, ViewView, update_post, delete_image, PeopleView, follow, remove_follow, read_notification, delete_post
 urlpatterns = [
     path('', IndexView.as_view(), name='index'),
     path('create_post/', CreatePostView.as_view(), name='create_post'),

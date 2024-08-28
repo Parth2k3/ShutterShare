@@ -3,9 +3,8 @@ from django.http import JsonResponse
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import redirect, render, get_object_or_404
 from .models import Posts, Topic, Image, Comments, Notifs
-# from .vector import main
+from .vector import generate_and_store_embeddings, index, model
 from comparato.permissions import CustomIsAuthenticated
-from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth.decorators import login_required
 from rest_framework.decorators import api_view
 import datetime
@@ -22,14 +21,13 @@ class IndexView(APIView):
         search_query = request.GET.get('q', '').strip()
         page_number = request.GET.get('page', 1)
         
-        # Filter posts based on the search query
         posts = Posts.objects.filter(
             Q(is_private=False) | Q(creator__in=request.user.following.all()) | Q(creator=request.user),
             Q(title__icontains=search_query) | Q(description__icontains=search_query)
         ).prefetch_related('post_topics').order_by('-id')
 
-        # Paginate posts
-        paginator = Paginator(posts, 4)  # Show 7 posts per page
+
+        paginator = Paginator(posts, 4)
         page_obj = paginator.get_page(page_number)
 
         for post in page_obj:
@@ -78,15 +76,8 @@ class CreatePostView(APIView):
                 messages = 'has made a new post.',
                 url = f"/view/{post.id}"
             )
+        generate_and_store_embeddings(post)
         return redirect("index")
-
-class UploadProgressView(APIView):
-    permission_classes = [CustomIsAuthenticated]
-
-    async def get(self, request):
-        user_id = request.user.id
-        progress = cache.get(f'upload_progress_{user_id}', 0)
-        return JsonResponse({'progress': progress})
 
 
 class CompareView(APIView):
