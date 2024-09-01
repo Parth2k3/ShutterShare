@@ -34,7 +34,7 @@ class IndexView(APIView):
         #         Q(is_private=False) | Q(creator__in=request.user.following.all()) | Q(creator=request.user)
         #     ).prefetch_related('post_topics').order_by('-id')
             
-        paginator = Paginator(posts, 4)
+        paginator = Paginator(posts, 6)
         page_obj = paginator.get_page(page_number)
 
         for post in page_obj:
@@ -53,38 +53,68 @@ class IndexView(APIView):
 
 
 import cloudinary.uploader
+import base64
+from io import BytesIO
+from django.core.files.base import ContentFile
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from PIL import Image as PILImage
+
+def decode_base64_file(data):
+    try:
+        format, imgstr = data.split(';base64,')
+        ext = format.split('/')[-1]
+        return ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
+    except ValueError as e:
+        print("Error splitting Base64 string:", e)
+        return None
+
+from io import BytesIO
 
 class CreatePostView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [CustomIsAuthenticated]
 
     def post(self, request):
         posted_data = request.data
-        posted_images = request.FILES.getlist('image')
         post = Posts.objects.create(
-            title = posted_data.get('title'),
-            description = posted_data.get('desc') if 'desc' in posted_data else None,
-            is_private = posted_data.get('privacy') == 'followers',
-            creator = request.user
+            title=posted_data.get('title'),
+            description=posted_data.get('desc') if 'desc' in posted_data else None,
+            is_private=posted_data.get('privacy') == 'followers',
+            creator=request.user
         )
-        for img in posted_images:
-            result = cloudinary.uploader.upload(img)
-            image_instance = Image.objects.create(
-                image_file=result['url'], 
-                creator=request.user
-            )
-            post.images.add(image_instance)
+
+        for base64_image in request.POST.getlist('cropped_images[]'):
+            img_data = decode_base64_file(base64_image)
+
+            if img_data is not None:
+                # Convert PIL image to bytes
+                img = PILImage.open(img_data)
+                img_byte_arr = BytesIO()
+                img.save(img_byte_arr, format='JPEG')
+                img_byte_arr = img_byte_arr.getvalue()
+
+                # Upload the image to Cloudinary
+                result = cloudinary.uploader.upload(img_byte_arr)
+
+                # Create Image instance and associate it with the post
+                image_instance = Image.objects.create(
+                    image_file=result['url'],
+                    creator=request.user
+                )
+                post.images.add(image_instance)
 
         for tag in posted_data.getlist('tags[]'):
             topic, created = Topic.objects.get_or_create(post=post)
             setattr(topic, tag, 1.0)
             topic.save()
+
         for follower in request.user.followers.all():
-            notif = Notifs.objects.create(
-                creator = request.user,
-                target = follower,
-                messages = 'has made a new post.',
-                url = f"/view/{post.id}"
+            Notifs.objects.create(
+                creator=request.user,
+                target=follower,
+                messages='has made a new post.',
+                url=f"/view/{post.id}"
             )
+
         generate_and_store_embeddings(post)
         return redirect("index")
 

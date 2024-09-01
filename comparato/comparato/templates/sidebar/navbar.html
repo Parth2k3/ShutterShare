@@ -3,7 +3,18 @@
 <link rel="stylesheet" href="{% static 'css/nav.css' %}">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet">
+<style>
+    #imagePreviews img, #croppedImagesContainer img {
+    max-width: 100%; /* Ensures the image doesn't exceed the container's width */
+    max-height: 150px; /* Controls the height to fit within the modal */
+    margin-bottom: 10px; /* Adds some space between images */
+    display: block;
+    margin-left: auto;
+    margin-right: auto; /* Center the image */
+}
 
+</style>
 <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top" style="background-color: #91b9ff7c !important; border-bottom-left-radius: 5%; border-bottom-right-radius: 5%;">
     <!-- Container wrapper -->
     <div class="container">
@@ -68,7 +79,7 @@
             </div>
             <div class="modal-body">
                 <form id="createPostForm" class="create-post-form" action="{% url 'create_post' %}" method="post" enctype="multipart/form-data">
-                  {% csrf_token %}
+                    {% csrf_token %}
                     <div class="mb-3">
                         <label for="postTitle" class="form-label">Title</label>
                         <input type="text" name="title" class="form-control" id="postTitle" required>
@@ -77,6 +88,12 @@
                         <label for="postImages" class="form-label">Images</label>
                         <input type="file" name="image" class="form-control" id="postImages" multiple>
                     </div>
+                    <div id="imagePreviewContainer" style="display:none;">
+                        <label for="imagePreview" class="form-label">Crop Images</label>
+                        <div id="imagePreviews"></div> <!-- Container for multiple images -->
+                        <button type="button" class="btn btn-primary mt-2" id="cropButton">Crop Selected Images</button>
+                    </div>
+                    <div id="croppedImagesContainer"></div>
                     <div class="mb-3">
                         <label for="postDescription" class="form-label">Description</label>
                         <textarea class="form-control" name="desc" id="postDescription" rows="3" required></textarea>
@@ -84,16 +101,16 @@
                     <div class="mb-3">
                         <label for="fruits">Topics</label>
                         <select id="fruits" name="tags[]" multiple data-multi-select>
-                          <option value="self_portraits">Self Portraits</option>
-                          <option value="art">Art</option>
-                          <option value="fashion_style">Fashion Style</option>
-                          <option value="products">Products</option>
-                          <option value="creative_projects">Creative Projects</option>
-                          <option value="events">Events</option>
-                          <option value="photography_techniques">Photography Techniques</option>
-                          <option value="themes_challenges">Themes & Challenges</option>
-                          <option value="inspiration_ideas">Inspiration & Ideas</option>
-                          <option value="comparisons">Comparisons</option>
+                            <option value="self_portraits">Self Portraits</option>
+                            <option value="art">Art</option>
+                            <option value="fashion_style">Fashion Style</option>
+                            <option value="products">Products</option>
+                            <option value="creative_projects">Creative Projects</option>
+                            <option value="events">Events</option>
+                            <option value="photography_techniques">Photography Techniques</option>
+                            <option value="themes_challenges">Themes & Challenges</option>
+                            <option value="inspiration_ideas">Inspiration & Ideas</option>
+                            <option value="comparisons">Comparisons</option>
                         </select>
                     </div>
                     <div class="mb-3">
@@ -108,11 +125,13 @@
                         <button type="submit" class="btn btn-primary">Create Post</button>
                     </div>
                 </form>
+                
             </div>
         </div>
     </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 <script>
@@ -123,6 +142,88 @@ document.addEventListener("DOMContentLoaded", function () {
       renderChoiceLimit: 10
   });
 });
+
+document.getElementById('postImages').addEventListener('change', function(event) {
+    const imagePreviewsContainer = document.getElementById('imagePreviews');
+    const croppedImagesContainer = document.getElementById('croppedImagesContainer');
+    const files = event.target.files;
+
+    imagePreviewsContainer.innerHTML = ''; // Clear previous images
+
+    if (files && files.length > 0) {
+        Array.from(files).forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgWrapper = document.createElement('div');
+                imgWrapper.style.marginBottom = '10px';
+
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.style.maxWidth = '100%';
+                img.setAttribute('data-index', index);
+
+                imgWrapper.appendChild(img);
+                imagePreviewsContainer.appendChild(imgWrapper);
+
+                const cropper = new Cropper(img, {
+                    aspectRatio: 16 / 9, // Set landscape aspect ratio (16:9)
+                    viewMode: 1,
+                });
+
+                img.cropper = cropper;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        document.getElementById('imagePreviewContainer').style.display = 'block';
+
+        document.getElementById('cropButton').addEventListener('click', function() {
+            const imageElements = document.getElementById('imagePreviews').querySelectorAll('img');
+
+            function cropImage(index) {
+                if (index >= imageElements.length) {
+                    // All images have been processed
+                    document.getElementById('imagePreviewContainer').style.display = 'none';
+                    return;
+                }
+
+                const img = imageElements[index];
+                const cropper = img.cropper;
+                
+                if (cropper) {
+                    cropper.getCroppedCanvas().toBlob(function(blob) {
+                        const reader = new FileReader();
+                        reader.onloadend = function() {
+                            const base64data = reader.result;  // This will be the Base64 string with metadata
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = 'cropped_images[]';
+                            input.value = base64data;  // Set the Base64 string as the input value
+                            croppedImagesContainer.appendChild(input);
+                            
+                            const croppedImg = document.createElement('img');
+                            croppedImg.src = base64data;  // This will display the cropped image in the container
+                            croppedImagesContainer.appendChild(croppedImg);
+
+                            cropper.destroy();
+                            cropImage(index + 1);  // Move to the next image
+                        };
+                        reader.readAsDataURL(blob);  // Converts the blob to a Base64 data URL
+                    }, 'image/jpeg'); 
+                } else {
+                    console.error('Cropper is not initialized for this image:', img);
+                    cropImage(index + 1); 
+                }
+
+            }
+
+            cropImage(0); 
+        });
+    }
+});
+
+
+
 
 document.addEventListener('DOMContentLoaded', () => {
     let page = 1;
