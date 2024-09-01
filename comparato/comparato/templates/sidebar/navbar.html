@@ -123,17 +123,21 @@ document.addEventListener("DOMContentLoaded", function () {
       renderChoiceLimit: 10
   });
 });
+
 document.addEventListener('DOMContentLoaded', () => {
     let page = 1;
     let loading = false;
     let hasMorePosts = true;
+    let isRelated = false;
 
     function loadMorePosts() {
         if (loading || !hasMorePosts) return;
         loading = true;
         const query = new URLSearchParams(window.location.search).get('q') || '';
         
-        fetch(`/?page=${page}&q=${encodeURIComponent(query)}`)
+        const url = `/?page=${page}&q=${encodeURIComponent(query)}&related=${isRelated ? 'true' : 'false'}`;
+        
+        fetch(url)
             .then(response => response.text())
             .then(html => {
                 const container = document.getElementById('post-container');
@@ -142,7 +146,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const newPosts = new DOMParser().parseFromString(html, 'text/html').querySelector('#post-container').innerHTML;
                 
-                // Check if no new posts are returned
                 if (newPosts.trim() === '') {
                     hasMorePosts = false;
                     return;
@@ -151,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 container.insertAdjacentHTML('beforeend', newPosts);
 
                 loading = false;
-                page += 1; // Increment page number after successful load
+                page += 1;
             })
             .catch(() => {
                 loading = false;
@@ -162,6 +165,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleScroll() {
         if (window.innerHeight + window.scrollY >= document.body.offsetHeight) {
             document.getElementById('loading').style.display = 'block';
+            isRelated = true;
+            hasMorePosts = true;
             loadMorePosts();
         }
     }
@@ -173,9 +178,20 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.search = `?q=${encodeURIComponent(query)}&page=1`;
         page = 1;
         hasMorePosts = true;
-        document.getElementById('post-container').innerHTML = ''; // Clear existing posts
+        isRelated = false;
+        document.getElementById('post-container').innerHTML = ''; 
+        loadMorePosts();
+    });
+
+    // Assuming a button or event to start showing related posts
+    document.getElementById('show-related-button').addEventListener('click', () => {
+        page = 1;
+        hasMorePosts = true;
+        isRelated = true;
+        document.getElementById('post-container').innerHTML = '';
         loadMorePosts();
     });
 });
+
 
 </script>

@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import redirect, render, get_object_or_404
 from .models import Posts, Topic, Image, Comments, Notifs
-from .vector import generate_and_store_embeddings, index, model
+from .vector import generate_and_store_embeddings, get_related_posts
 from comparato.permissions import CustomIsAuthenticated
 from django.contrib.auth.decorators import login_required
 from rest_framework.decorators import api_view
@@ -20,13 +20,20 @@ class IndexView(APIView):
     def get(self, request):
         search_query = request.GET.get('q', '').strip()
         page_number = request.GET.get('page', 1)
+        is_related = request.GET.get('related', 'false').lower() == 'true'
         
-        posts = Posts.objects.filter(
-            Q(is_private=False) | Q(creator__in=request.user.following.all()) | Q(creator=request.user),
-            Q(title__icontains=search_query) | Q(description__icontains=search_query)
-        ).prefetch_related('post_topics').order_by('-id')
-
-
+        if search_query:
+            posts = Posts.objects.filter(
+                Q(is_private=False) | Q(creator__in=request.user.following.all()) | Q(creator=request.user),
+                Q(title__icontains=search_query) | Q(description__icontains=search_query)
+            ).prefetch_related('post_topics').order_by('-id')
+        else:
+            posts = get_related_posts(request.user)
+        # else:
+        #     posts = Posts.objects.filter(
+        #         Q(is_private=False) | Q(creator__in=request.user.following.all()) | Q(creator=request.user)
+        #     ).prefetch_related('post_topics').order_by('-id')
+            
         paginator = Paginator(posts, 4)
         page_obj = paginator.get_page(page_number)
 
@@ -42,6 +49,8 @@ class IndexView(APIView):
             'notifications': notifications
         }
         return render(request, "home/index.html", context=context)
+
+
 
 import cloudinary.uploader
 

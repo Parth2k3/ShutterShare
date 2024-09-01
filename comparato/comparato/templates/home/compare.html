@@ -9,6 +9,80 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <style>
+
+.container-text {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    background: linear-gradient(135deg, #f9f9f9, #ffffff);
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Heading */
+.comparison-heading .title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 2.5em;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.comparison-heading .subtitle {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 1.2em;
+    color: #666;
+}
+
+/* Text Center */
+.text-center {
+    text-align: center;
+}
+
+/* Animation */
+.comparison-heading {
+    animation: fadeIn 2s ease-in-out;
+}
+
+
+@keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(-20px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Image Container */
+.image-container {
+    padding: 10px;
+}
+
+/* Styled Image */
+.styled-image {
+    width: 100%;
+    border-radius: 15px;
+    border: 5px solid #f1f1f1;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+/* Hover Effect */
+.styled-image:hover {
+    transform: scale(1.05);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+}
+
+/* Image Container Alignment */
+.image-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Ensuring Images are side by side with space */
+.row {
+    gap: 20px;
+}
+
+
         .image-container {
             position: relative;
             width: 45%;
@@ -38,16 +112,27 @@
         {% endif %}
     </nav>            
     {% csrf_token %}
-    <div class="container text-center" style="margin-top: 100px;">
+    <div class="container-text text-center" style="margin-top: 100px;">
+        <div class="comparison-heading">
+            <h1 class="title">Which Picture Looks Better?</h1>
+            <p class="subtitle">Help {{post.creator}} decide by choosing the better picture of the two below!</p>
+            <div class="progress" style="height: 30px;">
+                <div id="vote-progress" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="{{ totalComparisons }}"></div>
+            </div>
+            
+        </div>
+    </div>
+    <div class="container text-center" style="margin-top: 40px;">
         <div class="row justify-content-center">
             <div class="col-6 image-container" id="left-image" onclick="voteImage('left')">
-                <img src="{{ images.0.url }}" alt="Left Image">
+                <img src="{{ images.0.url }}" alt="Left Image" class="styled-image">
             </div>
             <div class="col-6 image-container" id="right-image" onclick="voteImage('right')">
-                <img src="{{ images.1.url }}" alt="Right Image">
+                <img src="{{ images.1.url }}" alt="Right Image" class="styled-image">
             </div>
         </div>
     </div>
+    
 
     <script>
         let images = {{ images|safe }};
@@ -55,7 +140,14 @@
         let rightIndex = 1;
         let totalVotes = 0;
         let postId = {{ post.id }};
-    
+        let totalComparisons = images.length * (images.length - 1) / 2;
+        function updateProgressBar() {
+            const progressElement = document.getElementById('vote-progress');
+            const progressPercentage = (totalVotes / totalComparisons) * 100;
+            progressElement.style.width = progressPercentage + '%';
+            progressElement.setAttribute('aria-valuenow', totalVotes);
+        }
+
         function updateImages() {
             // Redirect to thank you page when all image pairs have been voted on
             if (totalVotes >= (images.length * (images.length - 1)) / 2) {
@@ -66,6 +158,7 @@
             // Display the current pair of images
             document.getElementById('left-image').getElementsByTagName('img')[0].src = images[leftIndex].url;
             document.getElementById('right-image').getElementsByTagName('img')[0].src = images[rightIndex].url;
+        
         }
     
         function voteImage(side) {
@@ -83,7 +176,7 @@
             .then(data => {
                 if (data.status === 'success') {
                     totalVotes += 1;
-                    
+                    updateProgressBar();
                     // Move the right index forward
                     rightIndex += 1;
                     
@@ -105,7 +198,6 @@
                 }
             });
         }
-    
         updateImages(); // Initial call to display the first pair of images
     </script>
     
