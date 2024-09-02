@@ -226,7 +226,7 @@ document.getElementById('postImages').addEventListener('change', function(event)
 
 
 document.addEventListener('DOMContentLoaded', () => {
-    let page = 1;
+    let page = 2;
     let loading = false;
     let hasMorePosts = true;
     let isRelated = false;
@@ -259,7 +259,6 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(() => {
                 loading = false;
-                // Optionally handle errors
             });
     }
 

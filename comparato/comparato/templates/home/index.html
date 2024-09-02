@@ -11,6 +11,15 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
     
     <style>
+        #publicationImagePreviews img, #publicationCroppedImagesContainer img {
+            max-width: 100%;
+            max-height: 150px;
+            margin-bottom: 10px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
         /* Media Query to hide sidebars on mobile devices */
         @media (max-width: 767px) {
             .sidebar{
@@ -86,67 +95,75 @@
             <div class="col-md-6 gedf-main" style="margin-left: 210px; margin-top: 2rem; padding: 20px;">
 
                 <!--- \\\\\\\Post-->
-                <form action="{% url 'create_post' %}" enctype="multipart/form-data" method="post" class="create-post-form">
-                {% csrf_token %}
+                <form action="{% url 'create_post' %}" enctype="multipart/form-data" method="post" class="create-publication-form">
+                    {% csrf_token %}
                     <div class="card gedf-card">
-                    <div class="card-header">
-                        <ul class="nav nav-tabs card-header-tabs" id="myTab" role="tablist">
-                            <li class="nav-item">
-                                <a class="nav-link active" id="posts-tab" data-toggle="tab" href="#posts" role="tab" aria-controls="posts" aria-selected="true">Make a publication</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" id="images-tab" data-toggle="tab" role="tab" aria-controls="images" aria-selected="false" href="#images">Images</a>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="card-body">
-                        <div class="tab-content" id="myTabContent">
-                            <div class="tab-pane fade show active" id="posts" role="tabpanel" aria-labelledby="posts-tab">
-                                <div class="form-group">
-                                    <label class="sr-only" for="message">post</label>
-                                    <input type="text" name="title" class="form-control" id="message" placeholder="Title"></input>
-                                </div>
-                                <div class="form-group col-12 flex-column d-flex">
-                                    <label for="topics">Choose Tags</label>
-                                    <select id="topics" name="tags[]" multiple>
-                                        <option value="self_portraits">Self Portraits</option>
-                                        <option value="art">Art</option>
-                                        <option value="fashion_style">Fashion & Style</option>
-                                        <option value="products">Products</option>
-                                        <option value="creative_projects">Creative Projects</option>
-                                        <option value="events">Events</option>
-                                        <option value="photography_techniques">Photography Techniques</option>
-                                        <option value="themes_challenges">Themes & Challenges</option>
-                                        <option value="inspiration_ideas">Inspiration & Ideas</option>
-                                        <option value="comparisons">Comparisons</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="tab-pane fade" id="images" role="tabpanel" aria-labelledby="images-tab">
-                                <div class="form-group">
-                                    <div class="custom-file">
-                                        <label for="postImages" class="form-label">Images</label>
-                                        <input type="file" name="image" class="form-control" id="postImages" multiple>
+                        <div class="card-header">
+                            <ul class="nav nav-tabs card-header-tabs" id="createPublicationTab" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link active" id="publication-tab" data-toggle="tab" href="#publication" role="tab" aria-controls="publication" aria-selected="true">Make a publication</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="publicationImages-tab" data-toggle="tab" role="tab" aria-controls="publicationImages" aria-selected="false" href="#publicationImages">Images</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="card-body">
+                            <div class="tab-content" id="createPublicationTabContent">
+                                <div class="tab-pane fade show active" id="publication" role="tabpanel" aria-labelledby="publication-tab">
+                                    <div class="form-group">
+                                        <label class="sr-only" for="publicationTitle">Post</label>
+                                        <input type="text" name="title" class="form-control" id="publicationTitle" placeholder="Title">
+                                    </div>
+                                    <div class="form-group col-12 flex-column d-flex">
+                                        <label for="topics">Choose Tags</label>
+                                        <select id="topics" name="tags[]" multiple>
+                                            <option value="self_portraits">Self Portraits</option>
+                                            <option value="art">Art</option>
+                                            <option value="fashion_style">Fashion & Style</option>
+                                            <option value="products">Products</option>
+                                            <option value="creative_projects">Creative Projects</option>
+                                            <option value="events">Events</option>
+                                            <option value="photography_techniques">Photography Techniques</option>
+                                            <option value="themes_challenges">Themes & Challenges</option>
+                                            <option value="inspiration_ideas">Inspiration & Ideas</option>
+                                            <option value="comparisons">Comparisons</option>
+                                        </select>
                                     </div>
                                 </div>
-                                <div class="py-4"></div>
+                                <div class="tab-pane fade" id="publicationImages" role="tabpanel" aria-labelledby="publicationImages-tab">
+                                    <div class="form-group">
+                                        <div class="custom-file">
+                                            <label for="publicationPostImages" class="form-label">Images</label>
+                                            <input type="file" name="image" class="form-control" id="publicationPostImages" multiple>
+                                        </div>
+                                    </div>
+                                    <div id="publicationImagePreviewContainer" style="display:none;">
+                                        <div id="publicationImagePreviews"></div>
+                                    </div>
+                                    <button type="button" style="display: none;" class="btn btn-primary mt-2 mb-2" id="publicationCropButton">Crop Selected Images</button>
+                                    <div id="publicationCroppedImagesContainer"></div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="btn-toolbar justify-content-between">
-                            <div class="btn-group">
-                                <button type="submit" class="btn btn-primary">Share</button>
-                            </div>
-                            <div class="btn-group">
-                                    <i id="privacy-icon" class="fa fa-globe" style="font-size: 20px; margin-right: 10px; margin-top: 10px;"></i>
-                                    <select id="privacy-select" name="privacy" class="form-control" style="width: auto; display: inline-block;">
+                            <div class="btn-toolbar justify-content-between">
+                                <div class="btn-group">
+                                    <button type="submit" class="btn btn-primary">Share</button>
+                                </div>
+                                <div class="btn-group">
+                                    <i id="publicationPrivacyIcon" class="fa fa-globe" style="font-size: 20px; margin-right: 10px; margin-top: 10px;"></i>
+                                    <select id="publicationPrivacySelect" name="privacy" class="form-control" style="width: auto; display: inline-block;">
                                         <option value="public" selected>Public</option>
                                         <option value="followers">Followers</option>
                                     </select>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
                 </form>
+                
+                
+                
+                
                 <div id="post-container">
                 {% for post in posts %}
                 <div class="card gedf-card" id="post-{{ post.id }}">
@@ -274,6 +291,92 @@
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.3/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
     <script>
+
+document.getElementById('publicationPostImages').addEventListener('change', function(event) {
+    const imagePreviewsContainer = document.getElementById('publicationImagePreviews');
+    const croppedImagesContainer = document.getElementById('publicationCroppedImagesContainer');
+    const files = event.target.files;
+
+    imagePreviewsContainer.innerHTML = ''; // Clear previous images
+    croppedImagesContainer.innerHTML = '';
+    if (files && files.length > 0) {
+        Array.from(files).forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgWrapper = document.createElement('div');
+                imgWrapper.style.marginBottom = '10px';
+
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.style.maxWidth = '100%';
+                img.setAttribute('data-index', index);
+
+                imgWrapper.appendChild(img);
+                imagePreviewsContainer.appendChild(imgWrapper);
+
+                const cropper = new Cropper(img, {
+                    aspectRatio: 16 / 9, // Set landscape aspect ratio (16:9)
+                    viewMode: 1,
+                });
+
+                img.cropper = cropper;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        document.getElementById('publicationImagePreviewContainer').style.display = 'block';
+        document.getElementById('publicationCropButton').style.display = 'block';
+    }
+
+    document.getElementById('publicationCropButton').addEventListener('click', function() {
+        const imageElements = document.getElementById('publicationImagePreviews').querySelectorAll('img');
+
+        function cropImage(index) {
+            if (index >= imageElements.length) {
+                // All images have been processed
+                document.getElementById('publicationImagePreviewContainer').style.display = 'none';
+                return;
+            }
+
+            const img = imageElements[index];
+            const cropper = img.cropper;
+            
+            if (cropper) {
+                cropper.getCroppedCanvas().toBlob(function(blob) {
+                    const reader = new FileReader();
+                    reader.onloadend = function() {
+                        const base64data = reader.result;  // This will be the Base64 string with metadata
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'cropped_images[]';
+                        input.value = base64data;  // Set the Base64 string as the input value
+                        croppedImagesContainer.appendChild(input);
+                        
+                        const croppedImg = document.createElement('img');
+                        croppedImg.src = base64data;  // This will display the cropped image in the container
+                        croppedImagesContainer.appendChild(croppedImg);
+
+                        cropper.destroy();
+                        cropImage(index + 1);  // Move to the next image
+                    };
+                    reader.readAsDataURL(blob);  // Converts the blob to a Base64 data URL
+                }, 'image/jpeg'); 
+            } else {
+                console.error('Cropper is not initialized for this image:', img);
+                cropImage(index + 1); 
+            }
+            document.getElementById('publicationCropButton').style.display = 'none';
+        }
+
+        cropImage(0); 
+    });
+});
+
+
+
+
+
+
 
         $(document).ready(function() {
             $('.delete-post').click(function() {
