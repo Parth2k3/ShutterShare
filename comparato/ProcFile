@@ -1,0 +1,1 @@
+web: gunicorn comparato.wsgi --log-file -
