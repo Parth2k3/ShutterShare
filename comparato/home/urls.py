@@ -16,4 +16,5 @@ urlpatterns = [
     path('remove_follow/<int:user_id>', remove_follow, name='remove_follow'),
     path('read_notification/', read_notification, name='read_notification'),
     path('delete_post/<int:post_id>', delete_post, name='delete_post'),
+    
 ]

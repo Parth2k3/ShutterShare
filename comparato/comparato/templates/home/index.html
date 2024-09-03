@@ -11,6 +11,25 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
     
     <style>
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #000;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: auto; /* Center the spinner */
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
         #publicationImagePreviews img, #publicationCroppedImagesContainer img {
             max-width: 100%;
             max-height: 150px;
@@ -112,8 +131,8 @@
                             <div class="tab-content" id="createPublicationTabContent">
                                 <div class="tab-pane fade show active" id="publication" role="tabpanel" aria-labelledby="publication-tab">
                                     <div class="form-group">
-                                        <label class="sr-only" for="publicationTitle">Post</label>
-                                        <input type="text" name="title" class="form-control" id="publicationTitle" placeholder="Title">
+                                        <label for="publicationTitle">Title</label>
+                                        <input required type="text" name="title" class="form-control" id="publicationTitle" placeholder="What's your post about?">
                                     </div>
                                     <div class="form-group col-12 flex-column d-flex">
                                         <label for="topics">Choose Tags</label>
@@ -130,6 +149,10 @@
                                             <option value="comparisons">Comparisons</option>
                                         </select>
                                     </div>
+                                    <div class="form-group">
+                                        <label for="publicationDescription">Description:</label>
+                                        <input required type="text" name="desc" class="form-control" id="publicationDescription" placeholder="Describe what's in your post...">
+                                    </div>
                                 </div>
                                 <div class="tab-pane fade" id="publicationImages" role="tabpanel" aria-labelledby="publicationImages-tab">
                                     <div class="form-group">
@@ -142,6 +165,8 @@
                                         <div id="publicationImagePreviews"></div>
                                     </div>
                                     <button type="button" style="display: none;" class="btn btn-primary mt-2 mb-2" id="publicationCropButton">Crop Selected Images</button>
+                                    <button type="button" class="btn btn-secondary mt-2 mb-2" id="publicationResetButton">Reset</button>
+
                                     <div id="publicationCroppedImagesContainer"></div>
                                 </div>
                             </div>
@@ -280,7 +305,8 @@
                 </div>
                 {% endfor %}
                 </div>
-                <div id="loading" style="display: none;">Loading...</div>
+                <div id="loading" class="spinner" style="display: none;"></div>
+
             </div>
             {% include 'sidebar/sidebar_right.html' %}
         </div>
@@ -297,21 +323,42 @@ document.getElementById('publicationPostImages').addEventListener('change', func
     const croppedImagesContainer = document.getElementById('publicationCroppedImagesContainer');
     const files = event.target.files;
 
-    imagePreviewsContainer.innerHTML = ''; // Clear previous images
+    // Clear previous images and remove existing crop button event listeners
+    imagePreviewsContainer.innerHTML = '';
     croppedImagesContainer.innerHTML = '';
+    document.getElementById('publicationCropButton').removeEventListener('click', cropImages);
+
     if (files && files.length > 0) {
         Array.from(files).forEach((file, index) => {
             const reader = new FileReader();
             reader.onload = function(e) {
                 const imgWrapper = document.createElement('div');
                 imgWrapper.style.marginBottom = '10px';
+                imgWrapper.style.position = 'relative';
 
                 const img = document.createElement('img');
                 img.src = e.target.result;
                 img.style.maxWidth = '100%';
                 img.setAttribute('data-index', index);
 
+                const removeButton = document.createElement('button');
+                removeButton.textContent = 'Remove';
+                removeButton.style.position = 'absolute';
+                removeButton.style.top = '5px';
+                removeButton.style.right = '5px';
+                removeButton.classList.add('btn', 'btn-danger', 'btn-sm');
+
+                removeButton.addEventListener('click', function() {
+                    // Destroy the cropper instance
+                    if (img.cropper) {
+                        img.cropper.destroy();
+                    }
+                    // Remove the image wrapper
+                    imagePreviewsContainer.removeChild(imgWrapper);
+                });
+
                 imgWrapper.appendChild(img);
+                imgWrapper.appendChild(removeButton);
                 imagePreviewsContainer.appendChild(imgWrapper);
 
                 const cropper = new Cropper(img, {
@@ -326,9 +373,12 @@ document.getElementById('publicationPostImages').addEventListener('change', func
 
         document.getElementById('publicationImagePreviewContainer').style.display = 'block';
         document.getElementById('publicationCropButton').style.display = 'block';
+
+        // Reattach the crop button event listener
+        document.getElementById('publicationCropButton').addEventListener('click', cropImages);
     }
 
-    document.getElementById('publicationCropButton').addEventListener('click', function() {
+    function cropImages() {
         const imageElements = document.getElementById('publicationImagePreviews').querySelectorAll('img');
 
         function cropImage(index) {
@@ -346,15 +396,34 @@ document.getElementById('publicationPostImages').addEventListener('change', func
                     const reader = new FileReader();
                     reader.onloadend = function() {
                         const base64data = reader.result;  // This will be the Base64 string with metadata
+                        const imgWrapper = document.createElement('div');
+                        imgWrapper.style.marginBottom = '10px';
+                        imgWrapper.style.position = 'relative';
+
+                        const croppedImg = document.createElement('img');
+                        croppedImg.src = base64data;  // This will display the cropped image in the container
+                        croppedImg.style.maxWidth = '100%';
+
+                        const removeButton = document.createElement('button');
+                        removeButton.textContent = 'Remove';
+                        removeButton.style.position = 'absolute';
+                        removeButton.style.top = '5px';
+                        removeButton.style.right = '5px';
+                        removeButton.classList.add('btn', 'btn-danger', 'btn-sm');
+
+                        removeButton.addEventListener('click', function() {
+                            croppedImagesContainer.removeChild(imgWrapper);
+                        });
+
+                        imgWrapper.appendChild(croppedImg);
+                        imgWrapper.appendChild(removeButton);
+                        croppedImagesContainer.appendChild(imgWrapper);
+
                         const input = document.createElement('input');
                         input.type = 'hidden';
                         input.name = 'cropped_images[]';
                         input.value = base64data;  // Set the Base64 string as the input value
                         croppedImagesContainer.appendChild(input);
-                        
-                        const croppedImg = document.createElement('img');
-                        croppedImg.src = base64data;  // This will display the cropped image in the container
-                        croppedImagesContainer.appendChild(croppedImg);
 
                         cropper.destroy();
                         cropImage(index + 1);  // Move to the next image
@@ -365,10 +434,22 @@ document.getElementById('publicationPostImages').addEventListener('change', func
                 console.error('Cropper is not initialized for this image:', img);
                 cropImage(index + 1); 
             }
-            document.getElementById('publicationCropButton').style.display = 'none';
         }
 
         cropImage(0); 
+    }
+
+    // Reset button functionality
+    document.getElementById('publicationResetButton').addEventListener('click', function() {
+        imagePreviewsContainer.innerHTML = '';  // Clear all image previews
+        croppedImagesContainer.innerHTML = '';  // Clear all cropped images
+
+        document.getElementById('publicationPostImages').value = ''; // Reset file input
+        document.getElementById('publicationImagePreviewContainer').style.display = 'none';
+        document.getElementById('publicationCropButton').style.display = 'none';
+
+        // Remove existing crop button event listener
+        document.getElementById('publicationCropButton').removeEventListener('click', cropImages);
     });
 });
 

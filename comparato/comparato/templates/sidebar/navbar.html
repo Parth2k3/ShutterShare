@@ -93,6 +93,7 @@
                         <div id="imagePreviews"></div> <!-- Container for multiple images -->
                         <button type="button" class="btn btn-primary mt-2" id="cropButton">Crop Selected Images</button>
                     </div>
+                    <button type="button" class="btn btn-secondary mt-2 mb-2" id="resetButton">Reset</button>
                     <div id="croppedImagesContainer"></div>
                     <div class="mb-3">
                         <label for="postDescription" class="form-label">Description</label>
@@ -143,26 +144,47 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
+
 document.getElementById('postImages').addEventListener('change', function(event) {
     const imagePreviewsContainer = document.getElementById('imagePreviews');
     const croppedImagesContainer = document.getElementById('croppedImagesContainer');
     const files = event.target.files;
 
-    imagePreviewsContainer.innerHTML = ''; // Clear previous images
-
+    // Clear previous images and remove existing crop button event listeners
+    imagePreviewsContainer.innerHTML = '';
+    croppedImagesContainer.innerHTML = '';
+    document.getElementById('cropButton').removeEventListener('click', cropImages);
     if (files && files.length > 0) {
         Array.from(files).forEach((file, index) => {
             const reader = new FileReader();
             reader.onload = function(e) {
                 const imgWrapper = document.createElement('div');
                 imgWrapper.style.marginBottom = '10px';
+                imgWrapper.style.position = 'relative';
 
                 const img = document.createElement('img');
                 img.src = e.target.result;
                 img.style.maxWidth = '100%';
                 img.setAttribute('data-index', index);
 
+                const removeButton = document.createElement('button');
+                removeButton.textContent = 'Remove';
+                removeButton.style.position = 'absolute';
+                removeButton.style.top = '5px';
+                removeButton.style.right = '5px';
+                removeButton.classList.add('btn', 'btn-danger', 'btn-sm');
+
+                removeButton.addEventListener('click', function() {
+                    // Destroy the cropper instance
+                    if (img.cropper) {
+                        img.cropper.destroy();
+                    }
+                    // Remove the image wrapper
+                    imagePreviewsContainer.removeChild(imgWrapper);
+                });
+
                 imgWrapper.appendChild(img);
+                imgWrapper.appendChild(removeButton);
                 imagePreviewsContainer.appendChild(imgWrapper);
 
                 const cropper = new Cropper(img, {
@@ -177,50 +199,82 @@ document.getElementById('postImages').addEventListener('change', function(event)
 
         document.getElementById('imagePreviewContainer').style.display = 'block';
 
-        document.getElementById('cropButton').addEventListener('click', function() {
-            const imageElements = document.getElementById('imagePreviews').querySelectorAll('img');
+        // Reattach the crop button event listener
+        document.getElementById('cropButton').addEventListener('click', cropImages);
+    }
 
-            function cropImage(index) {
-                if (index >= imageElements.length) {
-                    // All images have been processed
-                    document.getElementById('imagePreviewContainer').style.display = 'none';
-                    return;
-                }
+    function cropImages() {
+        const imageElements = document.getElementById('imagePreviews').querySelectorAll('img');
 
-                const img = imageElements[index];
-                const cropper = img.cropper;
-                
-                if (cropper) {
-                    cropper.getCroppedCanvas().toBlob(function(blob) {
-                        const reader = new FileReader();
-                        reader.onloadend = function() {
-                            const base64data = reader.result;  // This will be the Base64 string with metadata
-                            const input = document.createElement('input');
-                            input.type = 'hidden';
-                            input.name = 'cropped_images[]';
-                            input.value = base64data;  // Set the Base64 string as the input value
-                            croppedImagesContainer.appendChild(input);
-                            
-                            const croppedImg = document.createElement('img');
-                            croppedImg.src = base64data;  // This will display the cropped image in the container
-                            croppedImagesContainer.appendChild(croppedImg);
-
-                            cropper.destroy();
-                            cropImage(index + 1);  // Move to the next image
-                        };
-                        reader.readAsDataURL(blob);  // Converts the blob to a Base64 data URL
-                    }, 'image/jpeg'); 
-                } else {
-                    console.error('Cropper is not initialized for this image:', img);
-                    cropImage(index + 1); 
-                }
-
+        function cropImage(index) {
+            if (index >= imageElements.length) {
+                // All images have been processed
+                document.getElementById('imagePreviewContainer').style.display = 'none';
+                return;
             }
 
-            cropImage(0); 
-        });
+            const img = imageElements[index];
+            const cropper = img.cropper;
+            
+            if (cropper) {
+                cropper.getCroppedCanvas().toBlob(function(blob) {
+                    const reader = new FileReader();
+                    reader.onloadend = function() {
+                        const base64data = reader.result;  // This will be the Base64 string with metadata
+                        const imgWrapper = document.createElement('div');
+                        imgWrapper.style.marginBottom = '10px';
+                        imgWrapper.style.position = 'relative';
+
+                        const croppedImg = document.createElement('img');
+                        croppedImg.src = base64data;  // This will display the cropped image in the container
+                        croppedImg.style.maxWidth = '100%';
+
+                        const removeButton = document.createElement('button');
+                        removeButton.textContent = 'Remove';
+                        removeButton.style.position = 'absolute';
+                        removeButton.style.top = '5px';
+                        removeButton.style.right = '5px';
+                        removeButton.classList.add('btn', 'btn-danger', 'btn-sm');
+
+                        removeButton.addEventListener('click', function() {
+                            croppedImagesContainer.removeChild(imgWrapper);
+                        });
+
+                        imgWrapper.appendChild(croppedImg);
+                        imgWrapper.appendChild(removeButton);
+                        croppedImagesContainer.appendChild(imgWrapper);
+
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'cropped_images[]';
+                        input.value = base64data;  // Set the Base64 string as the input value
+                        croppedImagesContainer.appendChild(input);
+
+                        cropper.destroy();
+                        cropImage(index + 1);  // Move to the next image
+                    };
+                    reader.readAsDataURL(blob);  // Converts the blob to a Base64 data URL
+                }, 'image/jpeg'); 
+            } else {
+                console.error('Cropper is not initialized for this image:', img);
+                cropImage(index + 1); 
+            }
+        }
+
+        cropImage(0); 
     }
+
+    document.getElementById('resetButton').addEventListener('click', function() {
+        imagePreviewsContainer.innerHTML = '';  // Clear all image previews
+        croppedImagesContainer.innerHTML = '';  // Clear all cropped images
+
+        document.getElementById('postImages').value = ''; // Reset file input
+        document.getElementById('imagePreviewContainer').style.display = 'none';
+
+        document.getElementById('cropButton').removeEventListener('click', cropImages);
+    });
 });
+
 
 
 
