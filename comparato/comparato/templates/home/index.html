@@ -41,6 +41,7 @@
 
         /* Media Query to hide sidebars on mobile devices */
         @media (max-width: 767px) {
+            
             .sidebar{
                 display: none; /* Hide sidebars on mobile */
             } 
@@ -62,6 +63,12 @@
             
         }
         @media (min-width: 767px){
+            .mini-search{
+                display: none;
+            }
+            .mini-inp{
+                display: none;
+            }
             .navbar-drop{
                 display: none;
             }
@@ -305,7 +312,7 @@
                 </div>
                 {% endfor %}
                 </div>
-                <div id="loading" class="spinner" style="display: none;"></div>
+                <div id="loading" class="spinner mt-3" style="display: none;"></div>
 
             </div>
             {% include 'sidebar/sidebar_right.html' %}

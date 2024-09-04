@@ -289,15 +289,25 @@ def read_notification(request):
     notifications.update(is_read = True)
     return JsonResponse({'status': 'success'})
 
+import re
+
 @login_required
 @api_view(['POST'])
 def delete_post(request, post_id):
     post = Posts.objects.get(id=post_id)
     if request.user == post.creator:
         for image in post.images.all():
-            cloudinary_id = image.image_file.public_id
-            destroy(cloudinary_id)
+            cloudinary_url = image.image_file
+            public_id = extract_public_id(cloudinary_url)
+            destroy(public_id)
             image.delete()
         post.delete()
         return JsonResponse({'status': 'success'})
     return JsonResponse({"status": "failed"})
+
+def extract_public_id(cloudinary_url):
+    # Regex to extract the public_id from the Cloudinary URL
+    match = re.search(r'/v\d+/(.+)\.\w+$', cloudinary_url)
+    if match:
+        return match.group(1)
+    return None
