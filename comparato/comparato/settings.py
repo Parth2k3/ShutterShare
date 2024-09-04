@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-zif$w7v5!banaam#4mzyl4t-*w6tma-tm3t0o^sx*4ldi0ycn&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['shuttershare.onrender.com', 'localhost']
+ALLOWED_HOSTS = ['shuttershare.onrender.com', 'localhost','127.0.0.1','127.0.0.1:8000']
 
 
 # Application definition
@@ -76,6 +76,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "comparato.wsgi.application"
 
+from dotenv import load_dotenv
+load_dotenv()
+
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
@@ -83,11 +86,11 @@ WSGI_APPLICATION = "comparato.wsgi.application"
 DATABASES = {
     'default': {   
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres.aoncfcixfaowriabhmzs',
-        'PASSWORD': 'J6vw6Kh2XTCsQqA4',
-        'HOST': 'aws-0-ap-south-1.pooler.supabase.com',
-        'PORT': '6543',
+        'NAME': os.getenv("SUPABASE_NAME"),
+        'USER': os.getenv("SUPABASE_USER"),
+        'PASSWORD': os.getenv("SUPABASE_PASSWORD"),
+        'HOST': os.getenv("SUPABASE_HOST"),
+        'PORT': os.getenv("SUPABASE_PORT"),
     }
 }
 
@@ -146,11 +149,11 @@ AUTH_USER_MODEL = 'user_app.User'
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
-from dotenv import load_dotenv
 
-load_dotenv()
 cloudinary.config(
   cloud_name = os.getenv("CLOUDINARY_NAME"),
   api_key = os.getenv("CLOUDINARY_KEY"),
   api_secret = os.getenv("CLOUDINARY_SECRET")
 )
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
