@@ -14,17 +14,14 @@
 <body>       
     <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top" style="background-color: #91b9ff7c !important; border-bottom-left-radius: 5%; border-bottom-right-radius: 5%;">
         <div class="container">
-            <a class="navbar-brand" style="margin-left: 0px;" href="/"><img id="MDB-logo" src="{% static 'media/logo-png-crop.png' %}" alt="ShutterShare Logo" draggable="false" height="30" /></a>
-        </div>
+            <a class="navbar-brand" style="margin-left: 20px;" href="/"><img id="MDB-logo" src="{% static 'media/logo-png-crop.png' %}" alt="ShutterShare Logo" draggable="false" height="30" /></a>
         {% if request.user.is_authenticated %}
-            <div class="dropdown navbar-drop" style="margin-right: 50px;">
                 <img src="{{ request.user.user_pic.url }}" alt="DP" class="rounded-circle" width="30" height="30">
-            </div>
         {% else %}
-            <div class="container" style="margin-left: 80% !important; border: solid; border-radius: 10px; border-color: rgb(5, 67, 75);">
                 <a class="navbar-brand" href="/register">Register here!</a>
-            </div>
         {% endif %}
+        </div>
+        
     </nav> 
 <div class="container" style="margin-top: 2%; padding-top: 50px;">
     <div class="main-body">

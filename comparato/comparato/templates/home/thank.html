@@ -98,7 +98,7 @@ html,body {
         <!-- Container wrapper -->
         <div class="container">
           <!-- Navbar brand -->
-          <a class="navbar-brand" style="margin-left: -50px;" href="/"><img id="MDB-logo"
+          <a class="navbar-brand" style="margin-left: 0px;" href="/"><img id="MDB-logo"
               src="{% static 'media/logo-png-crop.png' %}" alt="ShutterShare Logo"
               draggable="false" height="30" /></a>
         </div>
@@ -129,10 +129,12 @@ html,body {
         </form>
         </div>
     </div>
+    {% if request.user.is_authenticated == 'false' %}
     <div class="_footer">
-        <p>Already have an account? <a href="/login/">Login</a> </p>
         <a class="btn" href="/register/">Register Here</a>
+        <p>Already have an account? <a href="/login/">Login</a> </p>
     </div>
+    {% endif %}
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

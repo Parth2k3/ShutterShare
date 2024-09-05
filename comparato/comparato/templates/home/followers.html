@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="{% static 'css/followers.css' %}">
     <style>
         @media (max-width: 767px) {
+            .mini-inp{
+                display: none !important;
+            }
             .sidebar{
                 display: none; /* Hide sidebars on mobile */
             } 
@@ -24,11 +27,17 @@
                 margin-left: 3% !important;
             }
             .navbar-drop{
-                display: block;
+                display: none;
             }
             
         }
         @media (min-width: 767px){
+            #navbarSupportedContent{
+                display: none !important;
+            }
+            .mini-inp{
+                display: none !important;
+            }
             .navbar-drop{
                 display: none;
             }
