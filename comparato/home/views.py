@@ -3,7 +3,6 @@ from django.http import JsonResponse
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import redirect, render, get_object_or_404
 from .models import Posts, Topic, Image, Comments, Notifs
-from .vector import generate_and_store_embeddings, get_related_posts
 from comparato.permissions import CustomIsAuthenticated
 from django.contrib.auth.decorators import login_required
 from rest_framework.decorators import api_view
@@ -27,7 +26,9 @@ class IndexView(APIView):
                 Q(title__icontains=search_query) | Q(description__icontains=search_query)
             ).prefetch_related('post_topics').order_by('-id')
         else:
-            posts = get_related_posts(request.user)
+            posts = Posts.objects.filter(
+                Q(is_private=False) | Q(creator__in=request.user.following.all()) | Q(creator=request.user)
+            )
 
         paginator = Paginator(posts, 6)
         page_obj = paginator.get_page(page_number)
@@ -110,7 +111,6 @@ class CreatePostView(APIView):
                 url=f"/view/{post.id}"
             )
 
-        generate_and_store_embeddings(post)
         return redirect("index")
 
 
