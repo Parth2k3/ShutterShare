@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     'home',
     'user_app',
     'rest_framework',
-    'background_task',
 ]
 
 MIDDLEWARE = [
