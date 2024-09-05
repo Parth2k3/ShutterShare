@@ -161,5 +161,6 @@ cloudinary.config(
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 CSRF_TRUSTED_ORIGINS = [
     'https://shuttershare.up.railway.app',
-    'shuttershare.up.railway.app'
+    'http://shuttershare.up.railway.app',
+
 ]
