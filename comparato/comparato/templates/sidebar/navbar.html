@@ -13,33 +13,52 @@
     margin-left: auto;
     margin-right: auto; /* Center the image */
 }
+@media (min-width: 767px){
+        .mini-search{
+            display: none;
+        }
+        .mini-inp{
+            display: none;
+        }
+        .navbar-drop{
+            display: none;
+        }
+    }
 
 </style>
 <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top" style="background-color: #91b9ff7c !important; border-bottom-left-radius: 5%; border-bottom-right-radius: 5%;">
     <!-- Container wrapper -->
     <div class="container">
       <!-- Navbar brand -->
-      <a class="navbar-brand" style="margin-left: -50px;" href="/"><img id="MDB-logo"
-          src="{% static 'media/logo-png-crop.png' %}" alt="ShutterShare Logo"
-          draggable="false" height="30" /></a>
-  
-    
-      <div class="mini-inp">
-        <input type="search" id="search-input" class="form-control" aria-label="Text input with dropdown button" placeholder="Find what you like ...">
-      </div>
-      <a id="search-button" href="#" class="text-white mini-search" style="padding-left: 2px;"><i class="fas fa-search"></i></a>
-
-      <div class="dropdown navbar-drop">
-        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: transparent !important; border: none !important;">
+      <div class="navbar-content d-flex align-items-center">
+        <!-- Logo -->
+        <a class="navbar-brand" style="margin-left: -50px;" href="/">
+          <img id="MDB-logo" src="{% static 'media/logo-png-crop.png' %}" alt="ShutterShare Logo"
+            draggable="false" height="30" />
+        </a>
+      
+        <!-- Search Input and Button -->
+        <div class="mini-inp d-flex align-items-center">
+          <input type="search" id="search-input" class="form-control mini-inp" aria-label="Text input with dropdown button" placeholder="Find what you like ...">
+          <a id="search-button" href="#" class="text-white mini-search" style="padding-left: 10px;">
+            <i class="fas fa-search"></i>
+          </a>
+        </div>
+      
+        <!-- User Dropdown Menu -->
+        <div class="dropdown navbar-drop" style="margin-left: 80px !important;">
+          <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: transparent !important; border: none !important;">
             <img src="{{request.user.user_pic.url}}" alt="DP" class="rounded-circle" width="30" height="30">
-        </button>
-        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
+          </button>
+          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
             <button class="btn btn-primary dropdown-item" style="color: white; background-color: rgb(96, 96, 212) !important;" data-bs-toggle="modal" data-bs-target="#createPostModal">Create</button>
             <a class="dropdown-item" href="/profile/{{request.user.username}}">Profile</a>
             <a class="dropdown-item" href="/followers">People</a>
             <a class="dropdown-item" href="/logout">Logout</a>
+          </div>
+        </div>
       </div>
-      </div>
+      
   
       <!-- Collapsible wrapper -->
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
@@ -47,7 +66,7 @@
             
             <input type="search" id="search-input" class="form-control" aria-label="Text input with dropdown button" placeholder="Find what you like ...">
           </div>
-          <a id="search-button" href="#" class="text-white" style="padding-left: 5px;"><i class="fas fa-search ps-3"></i></a>
+          <a id="search-button-main" href="#" class="text-white" style="padding-left: 5px;"><i class="fas fa-search ps-3"></i></a>
         <div style="margin-right: -60px; padding-left: 295px;">
         <ul class="navbar-nav ms-3">
           <li class="nav-item me-3">
@@ -277,6 +296,76 @@ document.getElementById('postImages').addEventListener('change', function(event)
         document.getElementById('imagePreviewContainer').style.display = 'none';
 
         document.getElementById('cropButton').removeEventListener('click', cropImages);
+    });
+});
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    let page = 2;
+    let loading = false;
+    let hasMorePosts = true;
+    let isRelated = false;
+
+    function loadMorePosts() {
+        if (loading || !hasMorePosts) return;
+        loading = true;
+        const query = new URLSearchParams(window.location.search).get('q') || '';
+        
+        const url = `/?page=${page}&q=${encodeURIComponent(query)}&related=${isRelated ? 'true' : 'false'}`;
+        
+        fetch(url)
+            .then(response => response.text())
+            .then(html => {
+                const container = document.getElementById('post-container');
+                const loadingElement = document.getElementById('loading');
+                loadingElement.style.display = 'none';
+
+                const newPosts = new DOMParser().parseFromString(html, 'text/html').querySelector('#post-container').innerHTML;
+                
+                if (newPosts.trim() === '') {
+                    hasMorePosts = false;
+                    return;
+                }
+                
+                container.insertAdjacentHTML('beforeend', newPosts);
+
+                loading = false;
+                page += 1;
+            })
+            .catch(() => {
+                loading = false;
+            });
+    }
+
+    function handleScroll() {
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight) {
+            document.getElementById('loading').style.display = 'block';
+            isRelated = true;
+            hasMorePosts = true;
+            loadMorePosts();
+        }
+    }
+
+    window.addEventListener('scroll', handleScroll);
+
+    document.getElementById('search-button-main').addEventListener('click', () => {
+        const query = document.getElementById('search-input').value.trim();
+        window.location.search = `?q=${encodeURIComponent(query)}&page=1`;
+        page = 1;
+        hasMorePosts = true;
+        isRelated = false;
+        document.getElementById('post-container').innerHTML = ''; 
+        loadMorePosts();
+    });
+
+    // Assuming a button or event to start showing related posts
+    document.getElementById('show-related-button').addEventListener('click', () => {
+        page = 1;
+        hasMorePosts = true;
+        isRelated = true;
+        document.getElementById('post-container').innerHTML = '';
+        loadMorePosts();
     });
 });
 

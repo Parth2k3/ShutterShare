@@ -21,19 +21,14 @@ class IndexView(APIView):
         search_query = request.GET.get('q', '').strip()
         page_number = request.GET.get('page', 1)
         is_related = request.GET.get('related', 'false').lower() == 'true'
-        
-        if search_query:
+        if search_query != '':
             posts = Posts.objects.filter(
                 Q(is_private=False) | Q(creator__in=request.user.following.all()) | Q(creator=request.user),
                 Q(title__icontains=search_query) | Q(description__icontains=search_query)
             ).prefetch_related('post_topics').order_by('-id')
         else:
             posts = get_related_posts(request.user)
-        # else:
-        #     posts = Posts.objects.filter(
-        #         Q(is_private=False) | Q(creator__in=request.user.following.all()) | Q(creator=request.user)
-        #     ).prefetch_related('post_topics').order_by('-id')
-            
+
         paginator = Paginator(posts, 6)
         page_obj = paginator.get_page(page_number)
 
@@ -306,7 +301,6 @@ def delete_post(request, post_id):
     return JsonResponse({"status": "failed"})
 
 def extract_public_id(cloudinary_url):
-    # Regex to extract the public_id from the Cloudinary URL
     match = re.search(r'/v\d+/(.+)\.\w+$', cloudinary_url)
     if match:
         return match.group(1)
