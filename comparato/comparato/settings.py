@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-zif$w7v5!banaam#4mzyl4t-*w6tma-tm3t0o^sx*4ldi0ycn&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['shuttershare.up.railway.app','localhost','127.0.0.1','127.0.0.1:8000','shuttershare.onrender.com/']
+ALLOWED_HOSTS = ['shuttershare.up.railway.app','localhost','127.0.0.1','127.0.0.1:8000','shuttershare.onrender.com']
 
 
 # Application definition
